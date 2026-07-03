@@ -59,7 +59,7 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
             continue;
         }
 
-        // If adding this paragraph exceeds chunk size, save current chunk
+        // If adding this paragraph exceeds chunk size
         if (currentWordCount + paragraphWordCount > chunkSize && currentChunk.length > 0) {
             chunks.push({
                 content: currentChunk.join('\n\n'),
@@ -78,27 +78,23 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
             currentWordCount =
                 overlapText.split(/\s+/).length + paragraphWordCount;
         } else {
-            // Add paragraph to current chunk
             currentChunk.push(paragraph.trim());
             currentWordCount += paragraphWordCount;
         }
-
-        // Add the last chunk
-        if (currentChunk.length > 0) {
-            chunks.push({
-                content: currentChunk.join('\n\n'),
-                chunkIndex: chunkIndex,
-                pageNumber: 0
-            });
-        }
-
-        if (i + chunkSize >= allWords.length) break;
     }
-}
 
-return chunks;
+    // Add the last chunk
+    if (currentChunk.length > 0) {
+        chunks.push({
+            content: currentChunk.join('\n\n'),
+            chunkIndex: chunkIndex++,
+            pageNumber: 0
+        });
+    }
 
+    return chunks;
 
+};
 /**
 * Find relevant chunks based on keyword matching
 * @param {Array<Object>} chunks - Array of chunks
@@ -112,71 +108,77 @@ export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
         return [];
     }
 
-// Common stop words to exclude
-const stopWords = new Set([
-    'the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but',
-    'in', 'with', 'to', 'for', 'of', 'as', 'by', 'this', 'that', 'it'
-  ]);
+    // Common stop words to exclude
+    const stopWords = new Set([
+        'the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but',
+        'in', 'with', 'to', 'for', 'of', 'as', 'by', 'this', 'that', 'it'
+    ]);
 
-  // Extract and clean query words
-const queryWords = query
-.toLowerCase()
-.split(/\s+/)
-.filter(w => w.length > 2 && !stopWords.has(w));
+    // Extract and clean query words
+    const queryWords = query
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !stopWords.has(w));
 
-if (queryWords.length === 0) {
-    // Return clean chunk objects without mongoose meta data
-    return chunks.slice(0, maxChunks).map(chunk => ({
-        content: chunk.content,
-        chunkIndex: chunk.chunkIndex,
-        pageNumber: chunk.pageNumber,
-        _id: chunk._id
-    }));
-}
-
-const scoredChunks = chunks.map((chunk, index) => {
-    const content = chunk.content.toLowerCase();
-    const contentWords = content.split(/\s+/).length;
-    let score = 0;
-
-    // Score each query word
-    for (const word of queryWords) {
-        // Exact word match (higher score)
-        const exactMatches = (content.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
-        score += exactMatches * 3;
-
-        // Partial match (lower score)
-        const partialMatches = (content.match(new RegExp(word, 'g')) || []).length;
-        score += Math.max(0, partialMatches - exactMatches) * 1.5;
+    if (queryWords.length === 0) {
+        // Return clean chunk objects without mongoose meta data
+        return chunks.slice(0, maxChunks).map(chunk => ({
+            content: chunk.content,
+            chunkIndex: chunk.chunkIndex,
+            pageNumber: chunk.pageNumber,
+            _id: chunk._id
+        }));
     }
 
-    // Bonus: Multiple query words found
-    const uniqueWordsFound = queryWords.filter(word =>
-        content.includes(word)
-    ).length;
+    const scoredChunks = chunks.map((chunk, index) => {
+        const content = chunk.content.toLowerCase();
+        const contentWords = content.split(/\s+/).length;
+        let score = 0;
 
-    if (uniqueWordsFound > 1) {
-        score += uniqueWordsFound * 2;
-    }
-    
-    // Normalize by content length
-    const normalizedScore = score / Math.sqrt(contentWords);
-    
-    // Small bonus for earlier chunks
-    const positionBonus = 1 - (index / chunks.length) * 0.1;
-    
-    // Return clean object without Mongoose metadata
-    return {
-        content: chunk.content,
-        chunkIndex: chunk.chunkIndex,
-        pageNumber: chunk.pageNumber,
-        _id: chunk._id,
-        score: normalizedScore * positionBonus,
-        rawScore: score,
-        matchedWords: uniqueWordsFound
-    };
+        // Score each query word
+        for (const word of queryWords) {
+            // Exact word match (higher score)
+            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+            const exactMatches = (
+                content.match(new RegExp(`\\b${escapedWord}\\b`, "g")) || []
+            ).length;
+            score += exactMatches * 3;
+
+            // Partial match (lower score)
+            const partialMatches = (
+                content.match(new RegExp(escapedWord, "g")) || []
+            ).length;
+            score += Math.max(0, partialMatches - exactMatches) * 1.5;
+        }
+
+        // Bonus: Multiple query words found
+        const uniqueWordsFound = queryWords.filter(word =>
+            content.includes(word)
+        ).length;
+
+        if (uniqueWordsFound > 1) {
+            score += uniqueWordsFound * 2;
+        }
+
+        // Normalize by content length
+        const normalizedScore = score / Math.sqrt(contentWords);
+
+        // Small bonus for earlier chunks
+        const positionBonus = 1 - (index / chunks.length) * 0.1;
+
+        // Return clean object without Mongoose metadata
+        return {
+            content: chunk.content,
+            chunkIndex: chunk.chunkIndex,
+            pageNumber: chunk.pageNumber,
+            _id: chunk._id,
+            score: normalizedScore * positionBonus,
+            rawScore: score,
+            matchedWords: uniqueWordsFound
+        };
     });
-    
+
     return scoredChunks
         .filter(chunk => chunk.score > 0)
         .sort((a, b) => {
@@ -187,8 +189,6 @@ const scoredChunks = chunks.map((chunk, index) => {
                 return b.matchedWords - a.matchedWords;
             }
             return a.chunkIndex - b.chunkIndex;
-            })
-            .slice(0, maxChunks);
-            };
-
-
+        })
+        .slice(0, maxChunks);
+};
