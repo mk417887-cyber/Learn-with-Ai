@@ -15,10 +15,10 @@ import QuizTakePage from './pages/Quizzes/QuizTakePage'
 import QuizResultPage from './pages/Quizzes/QuizResultPage'
 import ProfilePage from './pages/Profile/ProfilePage'
 
-const App = () => {
-  const isAuthenticated = false
-  const loading = false
+import { useAuth } from './Context/AuthContext'
 
+const App = () => {
+  const   { isAuthenticated, loading } = useAuth();
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">

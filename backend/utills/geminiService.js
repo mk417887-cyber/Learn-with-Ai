@@ -112,28 +112,120 @@ export const generateQuiz = async (text, numQuestions = 5) => {
 
             for (const line of lines) {
                 const trimmed = line.trim();
-                if (trimmed.startsWith('Q:')) {
-                    question = trimmed.substring(2).trim();
-                } else if (trimmed.match(/^\d\d:/)) {
-                    options.push(trimmed.substring(3).trim());
-                } else if (trimmed.startsWith('C:')) {
-                    correctAnswer = trimmed.substring(2).trim();
-                } else if (trimmed.startsWith('E:')) {
-                    explanation = trimmed.substring(2).trim();
-                } else if (trimmed.startsWith('D:')) {
-                    const diff = trimmed.substring(2).trim().toLowerCase();
-                    if (['easy', 'medium', 'hard'].includes(diff)) {
-                        difficulty = diff;
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (trimmed.startsWith('Q:')) {
+                        question = trimmed.substring(2).trim();
+                    } else if (trimmed.match(/^O\d:/)) {
+                        options.push(trimmed.substring(3).trim());
+                    } else if (trimmed.startsWith('C:')) {
+                        correctAnswer = trimmed.substring(2).trim();
+                    } else if (trimmed.startsWith('E:')) {
+                        explanation = trimmed.substring(2).trim();
+                    } else if (trimmed.startsWith('D:')) {
+                        const diff = trimmed.substring(2).trim().toLowerCase();
+                        if (['easy', 'medium', 'hard'].includes(diff)) {
+                            difficulty = diff;
+                        }
                     }
+                }
+
+                if (question && options.length === 4 && correctAnswer) {
+                    questions.push({ question, options, correctAnswer, explanation, difficulty });
                 }
             }
 
-            if (question && options.length === 4 && correctAnswer && explanation) {
-                questions.push({ question, options, correctAnswer, explanation, difficulty });
-            }
+            return questions.slice(0, numQuestions);
         }
-
-        return questions;
+    } catch (error) {
+        console.error('Gemini API error:', error);
+        throw new Error('Failed to generate questions');
     }
-              }
 
+};
+
+/**
+ * Generate document summary
+ * @param {string} text - Document text
+ * @param {Promise<string>}
+ */
+export const generateSummary = async (text) => {
+    const prompt = `Provide a concise summary of the following text, highlighting the key concepts, key sentences, and key words.
+Keep the summary clear and structured.
+
+Text:
+${text.substring(0, 20000)}`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-lite",
+            contents: prompt,
+        });
+        const generatedText = response.text;
+        return generatedText
+    } catch (error) {
+        console.error('Gemini API error:', error);
+        throw new Error('Failed to generate summary');
+    }
+};
+
+/**
+ * Chat with document context
+ * @param {string} question - User question
+ * @param {Array<Object>} chunks - Relevant document chunks
+ * @returns {Promise<string>}
+ */
+
+export const chatWithContext = async (question, chunks) => {
+    const context = chunks.map((c, i) => `[Chunk ${i + 1}]\n${c.content}`).join('\n\n');
+
+    const prompt = `Based on the following context from a document, Analyse the context and answer the user's questions
+If the answer is not in the context, say so.
+
+Context:
+${context}
+
+Question:
+${question}
+
+Answer:`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-lite",
+            contents: prompt,
+        });
+        const generatedText = response.text;
+        return generatedText
+    } catch (error) {
+        console.error('Gemini API error:', error);
+        throw new Error('Failed to generate summary');
+    }
+};
+
+/**
+ * Explain a specific concept
+ * @param {string} concept - Concept to explain
+ * @param {string} context - Relevant context
+ * @returns {Promise<string>}
+ */
+export const explainConcept = async (concept, context) => {
+    const prompt = `Explain the concept of "${concept}" based on the following context.
+Provide a clear, educational explanation that's easy to understand.
+Include examples if relevant.
+
+Context:
+${context.substring(0, 10000)}`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-lite",
+            contents: prompt,
+        });
+        const generatedText = response.text;
+        return generatedText
+    } catch (error) {
+        console.error('Gemini API error:', error);
+        throw new Error('Failed to generate summary');
+    }
+};
