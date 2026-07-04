@@ -1,10 +1,10 @@
 import express from 'express';
 import {
     getQuizzes,
-    getQuizById,
     submitQuiz,
     getQuizResults,
-    deleteQuiz
+    deleteQuiz,
+    createQuiz
 } from '../controllers/quizController.js';
 import protect from '../middleware/auth.js';
 
@@ -14,7 +14,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/:documentId', getQuizzes);
-router.get('/quiz/:id', getQuizById);
+router.get('/quiz/:id', createQuiz);
 router.post('/:id/submit', submitQuiz);
 router.get('/:id/results', getQuizResults);
 router.delete('/:id', deleteQuiz);

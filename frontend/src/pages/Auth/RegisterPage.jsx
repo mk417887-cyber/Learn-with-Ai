@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../Context/AuthContext';
+
 import authService from '../../services/authService';
 import { BrainCircuit, Mail, Lock, ArrowRight, User } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -55,7 +55,11 @@ const RegisterPage = () => {
 
       <div className="relative w-full max-w-md px-6">
         <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl shadow-xl shadow-slate-200/50  p-10 ">
+
+
           {/* Header */}
+
+
           <div className="text-center  mb-10">
             <div className="inline-flex items-center justify-center  w-14 h-14 rounded-2xl  bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/25  mb-6">
               <BrainCircuit className="w-7 h-7 text-white" strokeWidth={2} />
@@ -69,22 +73,25 @@ const RegisterPage = () => {
           </div>
 
           {/* Form */}
-          <div className="">
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+  
             {/* Username Field */}
-            <div className="">
-              <label className="">
+  
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide  ">
                 Username
               </label>
-              <div className="">
+              <div className="relative group">
                 <div
                   className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${focusedField === "username" ? "text-emerald-500" : "text-gray-400"
                     }`}
                 >
-                  <User className="" strokeWidth={2} />
+                  <User className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <input
                   type="text"
-                  className="form-input"
+                  className="w-full h-12  text-sm placeholder-slate-400 border border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 font-medium transition-all duration-200 py-2 pl-10 pr-4 focus:border-emerald-500 focus:ring-emerald-500"
                   placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -94,6 +101,8 @@ const RegisterPage = () => {
               </div>
             </div>
 
+                    {/* Email Field */}
+                    
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
                 Email
@@ -147,8 +156,8 @@ const RegisterPage = () => {
 
             {/* Error Message */}
             {error && (
-              <div className="">
-                <p className="">
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+                <p className="text-xs text-red-600 font-medium text-center">
                   {error}
                 </p>
               </div>
@@ -158,27 +167,27 @@ const RegisterPage = () => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className=""
+              className="group relative w-full h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg transition-all duration-200"
             >
-              <span className="">
+              <span className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
                   <>
-                    <div className="" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Creating account...
                   </>
                 ) : (
                   <>
                     Create account
                     <ArrowRight
-                      className=""
+                      className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"
                       strokeWidth={2.5}
                     />
                   </>
                 )}
               </span>
-              <div className='' />
+              <div className=' absolute inset-0 bg-linear-to-r from-white/0 via-white/20 to-white/0 translate-x-full group-hover:translate-x-0 transition-transform duration-700' />
             </button>
-          </div>
+          </form>
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-slate-200/60">

@@ -14,8 +14,8 @@ import FlashcardPage from './pages/Flashcards/FlashcardPage'
 import QuizTakePage from './pages/Quizzes/QuizTakePage'
 import QuizResultPage from './pages/Quizzes/QuizResultPage'
 import ProfilePage from './pages/Profile/ProfilePage'
-
-import { useAuth } from './Context/AuthContext'
+import { AuthProvider } from "./Context/AuthContext";
+import { useAuth } from "./Context/AuthContext";
 
 const App = () => {
   const   { isAuthenticated, loading } = useAuth();

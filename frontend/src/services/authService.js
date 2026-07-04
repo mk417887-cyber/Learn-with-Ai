@@ -9,7 +9,7 @@ const login = async (email, password) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data ||  { message : 'Something went wrong' };
+        throw error.response?.data || { message: 'Something went wrong' };
     }
 };
 
@@ -18,7 +18,7 @@ const register = async (username, email, password) => {
         const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
             username,
             email,
-            password,
+            password
         });
         return response.data;
     } catch (error) {
