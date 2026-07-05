@@ -99,36 +99,36 @@ const DocumentListPage = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="">
+        <div className="flex items-center justify-center min-h-100">
           <Spinner />
         </div>
       );
     }
 
-    if (documents.length > 0) {
+    if (documents.length === 0) {
       return (
-        <div className="">
-          <div className="">
-            <div className="">
+        <div className="flex items-center justify-center min-h-100">
+          <div className="text-center max-w-md">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-linear-to-br from-slate-100 to-slate-200 shadow-lg shadow-slate-200/50 p-4  justifygap-4">
               <FileText
-                className=""
+                className="w-10 h-10 text-slate-400"
                 strokeWidth={1.5}
               />
             </div>
-            <h3 className="">
+            <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-2">
               No Documents Yet
             </h3>
 
-            <p className="">
+            <p className="text-sm text-slate-500 mb-6">
               Get started by uploading your first PDF document to begin
               learning.
             </p>
 
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className=""
+              className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 active:scale-[0.98]"
             >
-              <Plus className="" strokeWidth={2.5} />
+              <Plus className="w-4 h-4" strokeWidth={2.5} />
               Upload Document
             </button>
           </div>
@@ -137,7 +137,7 @@ const DocumentListPage = () => {
     };
 
     return (
-      <div className="">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {documents?.map((doc) => (
           <DocumentCard
             key={doc._id}
@@ -176,6 +176,111 @@ const DocumentListPage = () => {
         </div>
 
         {renderContent()}
+      </div>
+
+      <div className="">
+        <div className="">
+          {/* Close button */}
+          <button
+            onClick={() => setIsUploadModalOpen(false)}
+            className=""
+          >
+            <X className="" strokeWidth={2} />
+          </button>
+
+          {/* Modal Header */}
+          <div className="">
+            <h2 className="">
+              Upload New Document
+            </h2>
+            <p className="">
+              Add a PDF document to your library
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleUpload} className="">
+            {/* Title Input */}
+            <div className="">
+              <label className="">
+                Document Title
+              </label>
+              <input
+                type="text"
+                value={uploadTitle}
+                onChange={(e) => setUploadTitle(e.target.value)}
+                required
+                className=""
+                placeholder="e.g., React Interview Prep"
+              />
+            </div>
+
+            {/* File Upload */}
+            <div className="">
+              <label className="">
+                PDF File
+              </label>
+              <div className="">
+                <input
+                  id="file-upload"
+                  type="file"
+                  className=""
+                  onChange={handleFileChange}
+                  accept=".pdf"
+                />
+                <div className="">
+                  <div className="">
+                    <Upload
+                      className=""
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <p className="">
+                    {uploadFile ? (
+                      <span className="">
+                        {uploadFile.name}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="">
+                          Click to upload
+                        </span>{" "}
+                        or drag and drop
+                      </>
+                    )}
+                  </p>
+                  <p className="">PDF up to 10MB</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="">
+              <button
+                type="button"
+                onClick={() => setIsUploadModalOpen(false)}
+                disabled={uploading}
+                className=""
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={uploading}
+                className=""
+              >
+                {uploading ? (
+                  <span className="">
+                    <div className="" />
+                    Uploading...
+                  </span>
+                ) : (
+                  "Upload"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
     </div>

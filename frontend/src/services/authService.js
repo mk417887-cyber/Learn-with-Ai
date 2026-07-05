@@ -9,7 +9,7 @@ const login = async (email, password) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || { message: 'Something went wrong' };
+        throw error.response?.data || { message: error.message || 'Something went wrong' };
     }
 };
 
@@ -22,7 +22,7 @@ const register = async (username, email, password) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || { message: 'An unknown error occurred' };
+        throw error.response?.data || { message: error.message || 'An unknown error occurred' };
     }
 };
 
