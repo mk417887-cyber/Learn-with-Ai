@@ -104,6 +104,7 @@ const token = generateToken(user._id);
 
 res.status(200).json({
     success: true,
+    statusCode: 200,
     data: {
         user: {
             id: user._id,
