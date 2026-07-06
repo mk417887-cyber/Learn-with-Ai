@@ -1,150 +1,51 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Sparkles } from 'lucide-react';
-import { useParams } from 'react-router-dom';
-import aiService from '../../services/aiService';
-import { useAuth } from '../../context/AuthContext';
-import Spinner from '../common/Spinner';
-import MarkdownRenderer from '../common/MarkdownRenderer';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-const ChatInterface = () => {
-    const { id: documentId } = useParams();
-    const { user } = useAuth();
-    const [history, setHistory] = useState([]);
-    const [message, setMessage] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [initialLoading, setInitialLoading] = useState(true);
-    const messagesEndRef = useRef(null);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        const fetchChatHistory = async () => {
-            try {
-                setInitialLoading(true);
-                const response = await aiService.getChatHistory(documentId);
-                setHistory(response.data);
-            } catch (error) {
-                console.error('Error fetching chat history:', error);
-            }
-            finally {
-                setInitialLoading(false);
-            }
-        };
-
-        fetchChatHistory();
-    }, [documentId]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [history]);
-
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
-        if (!message.trim()) return;
-
-        const userMessage = { role: 'user', content: message, timestamp: new Date() };
-        setHistory(prev => [...prev, userMessage]);
-        setMessage('');
-        setLoading(true);
-
-        try {
-            const response = await aiService.chat(documentId, userMessage.content);
-            const assistantMessage = {
-                role: 'assistant',
-                content: response.data.answer,
-                timestamp: new Date(),
-                relevantChunks: response.data.relevantChunks
-            };
-            setHistory(prev => [...prev, assistantMessage]);
-        } catch (error) {
-            console.error('Chat error:', error);
-            const errorMessage = {
-                role: 'assistant',
-                content: 'Sorry, I encountered an error. Please try again later.',
-                timestamp: new Date()
-            };
-            setHistory(prev => [...prev, errorMessage]);
-        }
-        finally {
-            setLoading(false);
-        }
-    };
-
-    const renderMessage = (msg, index) => {
-        return "renderMessage"
-    };
-
-    if (initialLoading) {
-        return (
-            <div className="flex flex-col h-[70vh] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl items-center justify-center shadow-xl shadow-slate-200/50 p-8 ">
-                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-emerald-100 to-teal-200 mb-4 shadow-lg shadow-slate-200/50 flex items-center justify-center">
-                    <MessageSquare className="w-7 h-7 text-emerald-600" strokeWidth={2} />
-                </div>
-                <Spinner />
-                <p className="text-sm text-slate-500 mt-3 font-medium">Loading chat history...</p>
-            </div>
-        );
-    }
-
+const MarkdownRenderer = ({ content }) => {
     return (
-        <div className="flex flex-col h-[70vh] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 p-8">
-            {/* Messages Area */}
-            <div className="flex-1 p-6 overflow-y-auto bg-linear-to-br from-slate-50/50 via-white/50 to-slate-50/50">
-                {history.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-4 shadow-lg shadow-slate-200/50">
-                            <MessageSquare className="w-8 h-8 text-emerald-600" strokeWidth={2} />
-                        </div>
-                        <h3 className="text-base font-semibold text-slate-900 mb-2">Start a conversation</h3>
-                        <p className="text-sm text-slate-500">Ask me anything about the document!</p>
-                    </div>
-                ) : (
-                    history.map(renderMessage)
-                )}
-            </div>
-
-            <div ref={messagesEndRef} />
-
-            {loading && (
-                <div className="flex items-center gap-3 my-4">
-                    <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg shadow-slate-200/50 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-white" strokeWidth={2} />
-                    </div>
-
-                    <div className="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-bl-md bg-white border border-slate-200">
-                        <div className="flex gap-1">
-                            <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                            <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                            <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Input Area */}
-            <div className="p-5 border-t border-slate-200/60 bg-white/80">
-                <form onSubmit={handleSendMessage} className="flex items-center gap-3 ">
-                    <input
-                        type="text"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Ask a follow-up question..."
-                        className="flex-1 h-12 px-4 border-2 border-slate-200 rouded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-line focus-border-emerald-500 focus:bg-white focus:shadow-lg  focus:shadow-emerald-500/10 "
-                        disabled={loading}
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading || !message.trim()}
-                        className=""
-                    >
-                        <Send className="" strokeWidth={2} />
-                    </button>
-                </form>
-            </div>
+        <div className="text-neutral-700">
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                    h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                    h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-4 mb-2" {...props} />,
+                    h3: ({ node, ...props }) => <h3 className="text-md font-bold mt-3 mb-2" {...props} />,
+                    h4: ({ node, ...props }) => <h4 className="text-sm font-bold mt-3 mb-1" {...props} />,
+                    p: ({ node, ...props }) => <p className="mb-2 leading-relaxed" {...props} />,
+                    a: ({ node, ...props }) => <a className="text-[#00d492] hover:underline" {...props} />,
+                    ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 ml-4" {...props} />,
+                    ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 ml-4" {...props} />,
+                    li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                    strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+                    em: ({ node, ...props }) => <em className="italic" {...props} />,
+                    blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-neutral-300  pl-4 italic text-neutral-500 my-4" {...props} />,
+                    code: ({ node, inline, className, children, ...props }) => {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                            <SyntaxHighlighter
+                                style={dracula}
+                                language={match[1]}
+                                PreTag="div"
+                                {...props}
+                            >
+                                {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                        ) : (
+                            <code className="bg-neutral-100 p-1 rounded font-mono text-sm" {...props}>
+                                {children}
+                            </code>
+                        );
+                    },
+                    pre: ({ node, ...props }) => <pre className="bg-neutral-800 text-white p-3 rounded-md overflow-x-auto font-mono text-sm my-4" {...props} />,
+                }}
+            >
+                {content}
+            </ReactMarkdown>
         </div>
-    );
+
+    )
 }
 
-export default ChatInterface
+export default MarkdownRenderer
